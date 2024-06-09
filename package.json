@@ -16,6 +16,8 @@
   },
   "eslintConfig": {
     "extends": "./node_modules/standard/eslintrc.json"
-
+  },
+  "dependencies": {
+    "jsdom": "^24.1.0"
   }
 }
