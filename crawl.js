@@ -21,11 +21,13 @@ function getURLsFromHTML (html, baseURL) {
     if (url.slice(0, 1) === '/') {
       // Relative url
       try {
+        if (baseURL.slice(-1) === '/') {
+          baseURL = baseURL.slice(0, -1)
+        }
         const tryurl = new URL(`${baseURL}${url}`)
         urls.push(tryurl.href)
       } catch (err) {
         console.error('Invalid URL', err.message)
-        return []
       }
     } else {
       // Absolute url
@@ -34,20 +36,37 @@ function getURLsFromHTML (html, baseURL) {
         urls.push(tryurl.href)
       } catch (err) {
         console.error('Invalid URL', err.message)
-        return []
       }
     }
   }
   return urls
 }
 
-async function crawlPage (currentURL) {
+async function crawlPage (baseURL, currentURL, pages) {
+  const baseURLObj = new URL(baseURL)
+  const currentURLObj = new URL(currentURL)
+
+  if (baseURLObj.hostname !== currentURLObj.hostname) {
+    // currentURL is outside of the the baseURL page
+    return pages
+  }
+
+  const normalizedCurrentURL = normalizeURL(currentURL)
+  if (pages[normalizedCurrentURL] > 0) {
+    pages[normalizedCurrentURL]++
+    return pages
+  }
+
+  pages[normalizedCurrentURL] = 1
+
+  console.log(`Crawling ${currentURL}`)
+
   try {
     const res = await fetch(currentURL)
 
     if (res.status >= 400) {
       console.error(`Failed to fetch url. Status code ${res.status}`)
-      return
+      return pages
     }
 
     const contentType = res.headers.get('content-type')
@@ -55,11 +74,15 @@ async function crawlPage (currentURL) {
       console.error(`No html response. content-type: ${contentType}`)
     }
 
-    const text = await res.text()
-    console.log(text)
+    const htmlPage = await res.text()
+    const nextURLs = getURLsFromHTML(htmlPage, baseURL)
+    for (const nextURL of nextURLs) {
+      pages = await crawlPage(baseURL, nextURL, pages)
+    }
   } catch (e) {
     console.error('Failed to fetch url:', e.message)
   }
+  return pages
 }
 
 module.exports = {
