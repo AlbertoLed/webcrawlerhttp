@@ -41,7 +41,29 @@ function getURLsFromHTML (html, baseURL) {
   return urls
 }
 
+async function crawlPage (currentURL) {
+  try {
+    const res = await fetch(currentURL)
+
+    if (res.status >= 400) {
+      console.error(`Failed to fetch url. Status code ${res.status}`)
+      return
+    }
+
+    const contentType = res.headers.get('content-type')
+    if (contentType !== 'text/html; charset=utf-8') {
+      console.error(`No html response. content-type: ${contentType}`)
+    }
+
+    const text = await res.text()
+    console.log(text)
+  } catch (e) {
+    console.error('Failed to fetch url:', e.message)
+  }
+}
+
 module.exports = {
   normalizeURL,
-  getURLsFromHTML
+  getURLsFromHTML,
+  crawlPage
 }
