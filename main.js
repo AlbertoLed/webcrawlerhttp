@@ -9,10 +9,16 @@ async function main () {
   console.log(baseURL)
 
   const pages = await crawlPage(baseURL, baseURL, {})
-  console.log('Pages')
+  console.log('==============================')
+  console.log('==========  REPORT  ==========')
+  console.log('==============================')
+  console.log('Found - URL')
   for (const page of Object.entries(pages)) {
-    console.log(page)
+    console.log(page[1].toString().padStart(5) + '   ' + page[0])
   }
+  console.log('==============================')
+  console.log('========  END REPORT  ========')
+  console.log('==============================')
 }
 
 main()
